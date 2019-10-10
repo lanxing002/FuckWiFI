@@ -1,6 +1,6 @@
 ﻿// FuckWiFI.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
 //
-
+#include "WiFiLog.h"
 #include "pch.h"
 #include <iostream>
 
@@ -28,7 +28,7 @@
 */
 int scanWlanList(HANDLE hClient, GUID interfaceGUID) {
 
-	WCHAR targetNetWork[] = { 's', 'w', 'u', '-', 'w', 'i', 'f', 'i', '\0' };
+	static const WCHAR targetNetWork[] = { 's', 'w', 'u', '-', 'w', 'i', 'f', 'i', '\0' };
 	//Declare and initialize variables.
 	//HANDLE hClient = NULL;
 	DWORD dwResult = 0;
@@ -70,6 +70,9 @@ int scanWlanList(HANDLE hClient, GUID interfaceGUID) {
 			wprintf(L"  Profile Name[%u]:  %ws\n", i, pBssEntry->strProfileName);
 			if (wcscmp(pBssEntry->strProfileName, targetNetWork) == 0) {
 				wprintf(L"found______________________.....", i, pBssEntry->strProfileName);
+				//connect the wifi
+
+
 			}
 
 
@@ -91,6 +94,9 @@ int scanWlanList(HANDLE hClient, GUID interfaceGUID) {
 
 int wmain()
 {
+
+	const char* log_path = ".\ConnectWifi.log";
+	WiFiLog log(log_path);
 
 	//Declare and initialize variables.
 
