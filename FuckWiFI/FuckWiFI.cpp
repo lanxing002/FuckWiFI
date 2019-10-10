@@ -22,10 +22,73 @@
 #pragma comment(lib, "wlanapi.lib")
 #pragma comment(lib, "ole32.lib")
 
+/**
+	interface guid 是网卡的唯一描述符
+
+*/
+int scanWlanList(HANDLE hClient, GUID interfaceGUID) {
+
+
+	//Declare and initialize variables.
+	//HANDLE hClient = NULL;
+	DWORD dwResult = 0;
+	int iRet = 0;
+
+	/**
+	DWORD WlanScan(
+		HANDLE               hClientHandle,  
+		const GUID * pInterfaceGuid,  //网卡唯一描述符
+		const PDOT11_SSID    pDot11Ssid, //ssid, 设置为null
+		const PWLAN_RAW_DATA pIeData, //扫描网络的必要信息，比如820.1协议什么的
+		PVOID                pReserved //保留未来使用
+	);
+	*/
+
+	PDOT11_SSID interfaceSSID = NULL;
+	PWLAN_RAW_DATA ramData = NULL;
+	PVOID pvoid;
+	PWLAN_AVAILABLE_NETWORK_LIST pBssList;
+
+	//dwResult = WlanScan(hClient, &interfaceGUID, interfaceSSID, ramData, NULL);
+	//if (dwResult != ERROR_SUCCESS) {
+	//	wprintf(L"Wlan Scan Network failed with error: %u\n", dwResult);
+	//}
+
+	dwResult = WlanGetAvailableNetworkList(hClient, &interfaceGUID, 
+		WLAN_AVAILABLE_NETWORK_INCLUDE_ALL_ADHOC_PROFILES,
+		NULL, 
+		&pBssList);
+	if (dwResult != ERROR_SUCCESS) {
+		wprintf(L"Wlan Scan Network failed with error: %u\n", dwResult);
+		return 1;
+	}
+	else {
+		wprintf(L"  Num Entries: %lu\n\n", pBssList->dwNumberOfItems);
+		PWLAN_AVAILABLE_NETWORK pBssEntry = NULL;
+		for (int i = 0; i < pBssList->dwNumberOfItems; i++) {
+			pBssEntry = (WLAN_AVAILABLE_NETWORK*)& pBssList->Network[i];
+			wprintf(L"  Profile Name[%u]:  %ws\n", i, pBssEntry->strProfileName);
+
+			if (pBssEntry->dot11Ssid.uSSIDLength == 0)
+				wprintf(L"\n");
+			else {
+				for (int k = 0; k < pBssEntry->dot11Ssid.uSSIDLength; k++) {
+					wprintf(L"%c", (int)pBssEntry->dot11Ssid.ucSSID[k]);
+				}
+				wprintf(L"\n");
+			}
+		}
+	}
+
+
+	return 0;
+
+}
+
 int wmain()
 {
 
-	// Declare and initialize variables.
+	//Declare and initialize variables.
 
 	HANDLE hClient = NULL;
 	DWORD dwMaxClient = 2;   //    
@@ -59,6 +122,11 @@ int wmain()
 	else {
 		wprintf(L"Num Entries: %lu\n", pIfList->dwNumberOfItems);
 		wprintf(L"Current Index: %lu\n", pIfList->dwIndex);
+
+		//默认使用第一张网卡；
+		pIfInfo = (WLAN_INTERFACE_INFO*)& pIfList->InterfaceInfo[0];
+		scanWlanList(hClient, pIfInfo->InterfaceGuid);
+		/**
 		for (i = 0; i < (int)pIfList->dwNumberOfItems; i++) {
 			pIfInfo = (WLAN_INTERFACE_INFO *)&pIfList->InterfaceInfo[i];
 			wprintf(L"  Interface Index[%d]:\t %lu\n", i, i);
@@ -105,6 +173,7 @@ int wmain()
 			}
 			wprintf(L"\n");
 		}
+		*/
 	}
 
 	if (pIfList != NULL) {
