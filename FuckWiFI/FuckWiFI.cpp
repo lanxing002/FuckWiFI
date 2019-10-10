@@ -28,7 +28,7 @@
 */
 int scanWlanList(HANDLE hClient, GUID interfaceGUID) {
 
-
+	WCHAR targetNetWork[] = { 's', 'w', 'u', '-', 'w', 'i', 'f', 'i', '\0' };
 	//Declare and initialize variables.
 	//HANDLE hClient = NULL;
 	DWORD dwResult = 0;
@@ -68,6 +68,10 @@ int scanWlanList(HANDLE hClient, GUID interfaceGUID) {
 		for (int i = 0; i < pBssList->dwNumberOfItems; i++) {
 			pBssEntry = (WLAN_AVAILABLE_NETWORK*)& pBssList->Network[i];
 			wprintf(L"  Profile Name[%u]:  %ws\n", i, pBssEntry->strProfileName);
+			if (wcscmp(pBssEntry->strProfileName, targetNetWork) == 0) {
+				wprintf(L"found______________________.....", i, pBssEntry->strProfileName);
+			}
+
 
 			if (pBssEntry->dot11Ssid.uSSIDLength == 0)
 				wprintf(L"\n");
