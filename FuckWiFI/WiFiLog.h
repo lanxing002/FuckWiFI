@@ -2,34 +2,27 @@
 #include <string>
 #include <fstream>
 #include <ctime>
+#include <windows.h>
+#include <comdef.h>
 /**如何实现成为一个单例类
 */
-
-
-
-
 
 class WiFiLog
 {
 public:
 	WiFiLog(const std::string path);
-	WiFiLog(const char* path);
+	WiFiLog(const char *path);
+	WiFiLog();
 	~WiFiLog();
 
 	//输出日志
-	friend WiFiLog& operator<<(WiFiLog& log, const char* str);
-	friend WiFiLog& operator<<(WiFiLog& log, const std::string& str);
+	WiFiLog& logTime();
+
+	WiFiLog& operator<<(const std::string& str);
+	WiFiLog& operator<<(const char* str);
+	WiFiLog& operator<<(int code);
+	WiFiLog& operator<<(const WCHAR* wstr);
 
 private:
-	std::ofstream logFile;
+	std::ofstream _logFile;
 };
-
-WiFiLog& operator<<(WiFiLog& log, const char* str) {
-	log.logFile << str;
-	return log;
-}
-
-WiFiLog& operator<<(WiFiLog& log, const std::string& str) {
-	log.logFile << str;
-	return log;
-}

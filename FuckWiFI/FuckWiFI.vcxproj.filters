@@ -18,12 +18,24 @@
     <ClInclude Include="pch.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="WiFiLog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="WiFiConn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="FuckWiFI.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="WiFiLog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="WiFiConn.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
