@@ -5,6 +5,7 @@
 
 WiFiLog::WiFiLog(const std::string path)
 {
+	retract = 0;
 	_logFile.open(path, std::ofstream::out | std::ofstream::app);
 }
 
@@ -34,12 +35,21 @@ WiFiLog& WiFiLog::logTime() {
 	return *this;
 }
 
+
+int WiFiLog::out_retract() {
+	for (int i = 0; i < retract; i++)
+		_logFile << "\t";
+	return 0;
+}
+
 WiFiLog& WiFiLog::operator<<(const char* str) {
+	out_retract();
 	_logFile << str;
 	return *this;
 }
 
 WiFiLog& WiFiLog::operator<<(const std::string& str) {
+	out_retract();
 	_logFile << str;
 	return *this;
 }
@@ -49,7 +59,19 @@ WiFiLog& WiFiLog::operator<<(const int code) {
 	return *this;
 }
 
+WiFiLog& WiFiLog::operator<<(char ch) {
+	_logFile << ch;
+	return *this;
+}
+
+WiFiLog& WiFiLog::operator<<(DWORD dword) {
+	_logFile << (int)dword;
+	return *this;
+}
+
 WiFiLog& WiFiLog::operator<<(const WCHAR* wstr) {
+	
+	out_retract();
 	_bstr_t b(wstr);
 	
 	//自动类型转换

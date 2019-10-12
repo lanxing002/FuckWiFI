@@ -6,13 +6,7 @@
 #include "WiFiConn.h"
 #include <iostream>
 
-#include <windows.h>
-#include <wlanapi.h>
-#include <objbase.h>
-#include <wtypes.h>
 
-#include <stdio.h>
-#include <stdlib.h>
 
 // Need to link with Wlanapi.lib and Ole32.lib
 #pragma comment(lib, "wlanapi.lib")
@@ -25,7 +19,9 @@ void connetcWifi() {
 	WiFiConn awifiConn(&wifilog);
 	unsigned int sleepTime = 20 * 1000;
 
-	awifiConn.enumInterface();
+	if (awifiConn.enumInterface() == 0) {
+		awifiConn.getAvaiableNet();
+	}
 	//while (true) {
 	//	awifiConn.enumInterface();
 	//	Sleep(sleepTime);
