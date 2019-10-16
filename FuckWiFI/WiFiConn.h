@@ -2,6 +2,7 @@
 #include "WiFilog.h"
 
 #include <sstream>
+#include <string>
 
 #include <windows.h>
 #include <wlanapi.h>
@@ -18,10 +19,7 @@
 class WiFiConn
 {
 public:
-	WiFiConn(WiFiLog *log):_log(log){
-		_hClient = NULL;
-		//_pIfList = NULL;
-	}
+	WiFiConn(WiFiLog* log, const std::string wifiname);
 	~WiFiConn();
 
 	bool connect(int interface_index, std::string wifiName = "");
@@ -29,10 +27,15 @@ public:
 	int enumInterface();
 	int getAvaiableNet(int interface_index = 0);
 	int connect();
+
+	bool is_target(const char* str, int length);
+
+	PWLAN_CONNECTION_PARAMETERS build_wlan_parameters(WLAN_AVAILABLE_NETWORK entry, const char* ssid, const char* pass);
 private:
 	WiFiLog* _log;
 	PWLAN_INTERFACE_INFO_LIST _pIfList;
 	HANDLE _hClient;
+	std::string _wifiname;
 	unsigned int retract;
 };
 

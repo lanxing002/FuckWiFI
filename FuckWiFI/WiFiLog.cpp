@@ -25,12 +25,12 @@ WiFiLog::~WiFiLog()
 
 WiFiLog& WiFiLog::logTime() {
 
-	//auto tt = std::chrono::system_clock::now();
-	//std::time_t current = std::chrono::system_clock::to_time_t(tt);
+	auto tt = std::chrono::system_clock::now();
+	std::time_t current = std::chrono::system_clock::to_time_t(tt);
 
-	//// convert now to string form
-	// _logFile << std::ctime(&current) << ": ";
-	_logFile << "time xxxx: ";
+	// convert now to string form
+	 _logFile << std::ctime(&current) << ": ";
+	//_logFile << "time xxxx: ";
 
 	return *this;
 }

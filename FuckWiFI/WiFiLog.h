@@ -28,6 +28,7 @@ public:
 	void retract_reset(unsigned int num = 0) { retract = num; };
 	void plus_retract() { retract++; }
 	void sub_retract() { retract = retract > 0 ? retract - 1 : 0; }
+	void flush() { _logFile.flush();};
 
 
 private:
