@@ -1,41 +1,52 @@
 #include "pch.h"
 #include "WiFiConn.h"
+#include "WlanApiErrorWrapper.h"
+#include "StringHelper.h"
 
 #include <iostream>
+#include <algorithm>
 
-WiFiConn::WiFiConn(WiFiLog* log, const std::string wifiname) :_log(log), _wifiname(wifiname) {
-	//_pIfList = NULL;
-		//Declare and initialize variables.
-	DWORD dwMaxClient = 2;   //    
-	DWORD dwCurVersion = 0;
-	DWORD dwResult = 0;
-
-	//从服务器获取一个句柄, 假设会成功
-	dwResult = WlanOpenHandle(dwMaxClient, NULL, &dwCurVersion, &_hClient);
-	if (dwResult != ERROR_SUCCESS) {
-		_log->logTime();
-		*_log << "WlanOpenHandle failed with error: " << (int)dwResult << "\n";
-		wprintf(L"WlanOpenHandle failed with error: %d\n", (int)dwResult);
-		// FormatMessage can be used to find out why the function failed
-	}
+WiFiConn::WiFiConn(){
+	entries = new std::vector<WLAN_AVAILABLE_NETWORK>();
 }
 
 WiFiConn::~WiFiConn() {
 	std::cout << "wifi auto connection end";
-	if (_pIfList != NULL) {
-		WlanFreeMemory(_pIfList);
-		_pIfList = NULL;
-	}
+
+	delete entries;
 }
 
-int WiFiConn::enumInterface() {
-	//Declare and initialize variables.
-	DWORD dwResult;
-	int iRet = 0;
-	WCHAR GuidString[40] = { 0 };
-	int result_status = 1;
+bool WiFiConn::open_handle() {
+	//Declare and initialize variables 
+	DWORD dwMaxClient = 2;
+	DWORD dwCurVersion = 2;
+	
+	//open handle
+	auto result = WlanOpenHandle(dwMaxClient, NULL, &dwCurVersion, &wlan_handle);
+	
+	return WlanApiErrorWrapper::wrap_open_handle_result(result);
+}
 
-	dwResult = WlanEnumInterfaces(_hClient, NULL, &_pIfList);
+bool WiFiConn::get_interface_info() {
+	//Declare and initialize variables.
+	if (wlan_handle == nullptr) {
+		auto status = open_handle();
+		if (status == false)
+			return false; // cannot open client handle
+	}
+
+	PWLAN_INTERFACE_INFO_LIST interface_list = nullptr;
+	auto result = WlanEnumInterfaces(wlan_handle, NULL, &interface_list);
+
+	const auto is_success = WlanApiErrorWrapper::wrap_enum_interface_result(result);
+	
+	if (!is_success)
+		return false;
+
+	//取出默认网卡
+	pwlan_interface_info = interface_list->InterfaceInfo;
+	return true;
+	/**
 	if (dwResult != ERROR_SUCCESS) {
 		_log->logTime();
 		wprintf(L"WlanEnumInterfaces failed with error: %d\n", (int)dwResult);
@@ -113,26 +124,32 @@ int WiFiConn::enumInterface() {
 		}
 	}
 	return result_status;
+	*/
 }
 
 
-int WiFiConn::getAvaiableNet(int interface_index) {
+bool WiFiConn::scan_wlan_list(int interface_index) {
 	
 	//Declare and initialize variables.
-	DWORD dwResult = 0;
-	int iRet = 0;
-	PWLAN_AVAILABLE_NETWORK_LIST pBssList;
-	//默认使用第一张网卡
-	PWLAN_INTERFACE_INFO pIfInfo = NULL;
-	pIfInfo = (WLAN_INTERFACE_INFO*)& _pIfList->InterfaceInfo[interface_index];
+	PWLAN_AVAILABLE_NETWORK_LIST pnetwork_list;
 
-	//reset the log retract
-	_log->retract_reset();
-
-	dwResult = WlanGetAvailableNetworkList(_hClient, &(pIfInfo->InterfaceGuid),
+	auto result = WlanGetAvailableNetworkList(wlan_handle, &(pwlan_interface_info->InterfaceGuid),
 		WLAN_AVAILABLE_NETWORK_INCLUDE_ALL_ADHOC_PROFILES,
 		NULL,
-		&pBssList);
+		&pnetwork_list);
+
+	bool is_success = WlanApiErrorWrapper::wrap_get_network_list_result(result);
+	
+	if (!is_success)
+		return false;
+
+	//do available network list copy to private vector
+	for (DWORD network_index = 0; network_index < pnetwork_list->dwNumberOfItems; network_index++)
+		entries->push_back(pnetwork_list->Network[network_index]);
+
+	WlanFreeMemory(pnetwork_list);
+	return true;
+	/**
 	_log->logTime();
 	*_log << "start scan Network ... ...\n";
 	_log->plus_retract();
@@ -207,7 +224,6 @@ int WiFiConn::getAvaiableNet(int interface_index) {
 				// Now connected with open networks
 				//con = WlanConnect(hClient, &pInterface->InterfaceGuid, &connectionParams, NULL);s
 
-				/* Connect to the host */
 				auto status = WlanConnect(_hClient, &pIfInfo->InterfaceGuid, &connectionParams, NULL);
 				if (status == ERROR_SUCCESS) {
 					*_log << "connect success!!!";
@@ -227,28 +243,21 @@ int WiFiConn::getAvaiableNet(int interface_index) {
 	}
 	*_log << "\n\n";
 	return 0;
+*/
 }
 
-bool WiFiConn::is_target(const char* str, int length) {
-	if (length != _wifiname.size())
-		return false;
-	for (int i = 0; i < _wifiname.size(); i++)
-		if (str[i] != str[i])
-			return false;
-	return true;
-}
 
-PWLAN_CONNECTION_PARAMETERS WiFiConn::build_wlan_parameters(WLAN_AVAILABLE_NETWORK entry, const char* ssid,
-	const char* pass)
-{
+PWLAN_CONNECTION_PARAMETERS WiFiConn::build_wlan_parameters(WLAN_AVAILABLE_NETWORK entry, 
+	const std::string& wifiname, const std::string& pass){
+	//应该使用自动内存管理机制，不然在何处释放
 	const auto params = new WLAN_CONNECTION_PARAMETERS();
 
 	params->wlanConnectionMode = wlan_connection_mode_profile;
 
-	const std::string ssid_str(ssid);
-	//const auto w_ssid_str = StringHelper::convert_string_to_w_string(ssid_str);
+	const auto w_ssid_str = StringHelper::string_convert_wstring(wifiname);
 
-	//params->strProfile = static_cast<LPCWSTR>(w_ssid_str->c_str());
+	//转换为wstring的内存何时释放
+	params->strProfile = static_cast<LPCWSTR>(w_ssid_str->c_str());
 	params->pDot11Ssid = &entry.dot11Ssid;
 
 	params->pDesiredBssidList = nullptr;
@@ -258,8 +267,29 @@ PWLAN_CONNECTION_PARAMETERS WiFiConn::build_wlan_parameters(WLAN_AVAILABLE_NETWO
 	return params;
 }
 
-int WiFiConn::connect() {
+bool WiFiConn::connect(std::string wifiname, std::string password) {
+	//确定 wlan client 已经open
+	if (wlan_handle == nullptr)
+		if (!open_handle())
+			return false;
+	//网卡信息已经获取
+	if (pwlan_interface_info == nullptr)
+		if (!get_interface_info())
+			return false;
 
-	_log->flush();
+	//real-time scanning network
+	if (!scan_wlan_list())
+		return false;
+
+	const auto target_network = std::find_if(std::begin(*entries), std::end(*entries), [wifiname](WLAN_AVAILABLE_NETWORK entry) 
+		{ return StringHelper::is_equal(entry.dot11Ssid.ucSSID, wifiname.c_str()); });
+
+	if (target_network == std::end(*entries)){
+		std::cout << "do not has this network: " << wifiname << std::endl;
+		return false;
+	}
+
+	auto connect_parameters = build_wlan_parameters(*target_network, wifiname.c_str(), password.c_str());
+	auto result  = 
 	return 0;
 }

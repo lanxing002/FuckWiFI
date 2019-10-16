@@ -3,6 +3,8 @@
 
 #include <sstream>
 #include <string>
+#include <vector>
+
 
 #include <windows.h>
 #include <wlanapi.h>
@@ -12,30 +14,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Need to link with Wlanapi.lib and Ole32.lib
-#pragma comment(lib, "wlanapi.lib")
-#pragma comment(lib, "ole32.lib")
-
 class WiFiConn
 {
 public:
-	WiFiConn(WiFiLog* log, const std::string wifiname);
+	WiFiConn();
 	~WiFiConn();
 
 	bool connect(int interface_index, std::string wifiName = "");
 	
-	int enumInterface();
-	int getAvaiableNet(int interface_index = 0);
-	int connect();
+	//get wlan interface (hard adapter)
+	bool get_interface_info();
+	bool scan_wlan_list(int interface_index = 0);
+	bool connect(const std::string wifiname, const std::string password);
 
-	bool is_target(const char* str, int length);
 
-	PWLAN_CONNECTION_PARAMETERS build_wlan_parameters(WLAN_AVAILABLE_NETWORK entry, const char* ssid, const char* pass);
 private:
-	WiFiLog* _log;
-	PWLAN_INTERFACE_INFO_LIST _pIfList;
-	HANDLE _hClient;
-	std::string _wifiname;
-	unsigned int retract;
+
+	PWLAN_INTERFACE_INFO pwlan_interface_info = nullptr;
+	HANDLE wlan_handle = nullptr;
+
+	std::vector<WLAN_AVAILABLE_NETWORK>* entries = nullptr;
+	
+	//open wlan client handle
+	bool open_handle();
+	PWLAN_CONNECTION_PARAMETERS build_wlan_parameters(WLAN_AVAILABLE_NETWORK entry, const std::string& wifiname, const std::string& pass);
+
 };
 

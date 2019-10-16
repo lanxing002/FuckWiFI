@@ -24,6 +24,12 @@
     <ClInclude Include="WiFiConn.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="WlanApiErrorWrapper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="StringHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -39,6 +45,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="temp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="WlanApiErrorWrapper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="StringHelper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
