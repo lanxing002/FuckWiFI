@@ -25,7 +25,7 @@ bool WlanApiErrorWrapper::wrap_enum_interface_result(const DWORD enum_interface_
 //wrap get network list result
 bool WlanApiErrorWrapper::wrap_get_network_list_result(const DWORD get_network_list_result) {
 	if ( get_network_list_result != ERROR_SUCCESS) {
-		std::cout << "EnumInterface failed with error: " << get_network_list_result << std::endl;
+		std::cout << "get network list failed with error: " << get_network_list_result << std::endl;
 		return false;
 	}
 	return true;

@@ -6,7 +6,8 @@ bool StringHelper::is_equal(UCHAR* lhs, const char* rhs) {
 	return strcmp(reinterpret_cast<char*>(lhs), rhs) == 0;
 }
 
-std::wstring * StringHelper::string_convert_wstring(const std::string& str) {
-	return new std::wstring(std::begin(str), std::end(str));
+std::shared_ptr<std::wstring> StringHelper::string_convert_wstring(const std::string& str) {
+	return std::make_shared<std::wstring>(std::begin(str), std::end(str));
 }
 
+ 
