@@ -5,29 +5,30 @@
 #include "WiFiConn.h"
 #include <iostream>
 
-#include <vld.h>
+//#include <vld.h>
 
 // Need to link with Wlanapi.lib and Ole32.lib
 #pragma comment(lib, "wlanapi.lib")
 #pragma comment(lib, "ole32.lib")
 
 void connetcWifi() {
-	//EnableMemLeakCheck();
-	std::string log_path("ConnectWifi.log");
-	WiFiLog wifilog(log_path);
 
 	std::string wifiname("swu-wifi");
-	WiFiConn awifiConn;
-	unsigned int sleepTime =  1 * 100;
+	unsigned int sleepTime =  60 * 1000;
 
 	int cnt = 0;
 	while (true) {
-		if (awifiConn.get_interface_status() == 0) {
-			continue;  //there is no interface
-
+		Sleep(sleepTime);
+		//已经连接状态
+		{
+			WiFiConn awifiConn;
+			auto interface_status = awifiConn.get_interface_status();
+			if (interface_status != 0) {
+				std::cout << "statucs ---> :" << interface_status << std::endl;
+				continue;  //there is no interface or apapter not ready to reconnect
+			}
+			awifiConn.connect(wifiname, "");
 		}
-		awifiConn.connect(wifiname, "");
-		//Sleep(sleepTime);
 	}
 	
 	return;

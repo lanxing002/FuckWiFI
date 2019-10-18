@@ -11,9 +11,11 @@ WiFiConn::WiFiConn(){
 }
 
 WiFiConn::~WiFiConn() {
-	std::cout << "wifi auto connection end";
+	if (pwlan_interface_list != nullptr)
+		WlanFreeMemory(pwlan_interface_list);
 
 	delete entries;
+
 }
 
 bool WiFiConn::open_handle() {
@@ -74,23 +76,25 @@ int WiFiConn::get_interface_status(std::string& desc ) {
 		std::cout <<  "not open hard wifi adapter" << std::endl;
 		return -1;
 	}
+
 	static int cnt = 0;
-	std::cout << "times: " << cnt++ << std::endl;
+	std::cout << "get interface status times: " << cnt++ << std::endl;
+
 	switch (pwlan_interface_list->InterfaceInfo->isState) {
 	case wlan_interface_state_not_ready:
-		desc = "Not ready"; break;
+		desc = "Not ready"; result = -2; break; //没有准备好
 	
 	case wlan_interface_state_connected:
-		desc = "Connected"; result = 0; break;
+		desc = "Connected"; result = 1; break;
 	
 	case wlan_interface_state_ad_hoc_network_formed:
 		desc = "First node in a ad hoc network"; break;
 	
 	case wlan_interface_state_disconnecting:
-		desc = "Disconnecting"; break;
+		desc = "Disconnecting";  break;
 	
 	case wlan_interface_state_disconnected:
-		desc = "Not connected"; break;
+		desc = "Not connected"; result = 0; break;
 	
 	case wlan_interface_state_associating:
 		desc = "Attempting to associate with a network"; break;
@@ -103,6 +107,8 @@ int WiFiConn::get_interface_status(std::string& desc ) {
 	default:
 		desc = "Unknown state"; break;
 	}
+
+	std::cout << "adapter status: " << desc << std::endl;
 
 	return result;
 }
@@ -187,6 +193,10 @@ bool WiFiConn::connect(std::string wifiname, std::string password) {
 
 	const auto w_ssid_str = StringHelper::string_convert_wstring(wifiname);
 	auto connect_parameters = build_wlan_parameters(*target_network, w_ssid_str.get(), password.c_str());
+	
+	static size_t times = 0;
+	std::cout << "wlan connect times: " << times << std::endl;
+
 	auto result = WlanConnect(wlan_handle, 
 		&pwlan_interface_list->InterfaceInfo->InterfaceGuid, 
 		connect_parameters.get(), 
